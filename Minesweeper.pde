@@ -1,5 +1,6 @@
 import de.bezier.guido.*;
-//Declare and initialize constants NUM_ROWS and NUM_COLS = 20
+public final static int NUMS_ROWS = 20;
+public final static int NUMS_COLS = 20;
 private MSButton[][] buttons; //2d array of minesweeper buttons
 private ArrayList <MSButton> mines; //ArrayList of just the minesweeper buttons that are mined
 
@@ -12,14 +13,24 @@ void setup ()
     Interactive.make( this );
     
     //your code to initialize buttons goes here
+    buttons = new MSButton[NUMS_ROWS][NUMS_COLS];
+    for (int r = 0; r<NUMS_ROWS; r++) {
+      for (int c = 0; c<NUMS_COLS; c++) {
+        buttons[r][c]= new MSButton (r, c);
+      }
+    }
     
-    
-    
-    setMines();
+    for (int i = 0; i<20; i++){
+      setMines();
+    }
 }
 public void setMines()
 {
-    //your code
+  int row = (int)(Math.random()*NUMS_ROWS);
+  int col = (int)(Math.random()*NUMS_COLS);
+  if (!mines.contains(buttons[row][col])) {
+    mines.add(buttons[row][col]);
+  }
 }
 
 public void draw ()
@@ -30,26 +41,61 @@ public void draw ()
 }
 public boolean isWon()
 {
-    //your code here
-    return false;
+  int countUntouchedMines= 0 ;
+  int spaces = 0;
+  for (int r= 0; r<NUMS_ROWS; r++) {
+    for (int c = 0; c<NUMS_COLS; c++) {
+      if (buttons[r][c].clicked == false && mines.contains(buttons[r][c])== true) {
+        countUntouchedMines++;
+      }  
+      if (buttons[r][c].clicked==true&&mines.contains(buttons[r][c])==false) {
+        spaces++;
+      }
+    }
+  }
+  if (countUntouchedMines == mines.size() && spaces == (NUMS_ROWS*NUMS_COLS-mines.size())) {
+    return true;
+  }
+  else{
+  return false;
+  }
 }
 public void displayLosingMessage()
 {
-    //your code here
+  for(int r = 0; r<NUMS_ROWS; r++){
+    for(int c= 0; c<NUMS_COLS; c++){
+       if(!buttons[r][c].clicked){
+        buttons[r][c].mousePressed();
+        }
+     }
+  }
+  buttons[NUMS_ROWS/2][NUMS_COLS/2].setLabel("LOSER");
 }
 public void displayWinningMessage()
 {
-    //your code here
+    buttons[NUMS_ROWS/2][NUMS_COLS/2].setLabel("WINNER!!");
 }
 public boolean isValid(int r, int c)
 {
-    //your code here
-    return false;
+  if (r>=0&&r<NUMS_ROWS&&c>=0&&c<NUMS_COLS)
+  {
+    return true;
+  }
+  return false;
 }
 public int countMines(int row, int col)
 {
     int numMines = 0;
-    //your code here
+    for (int r = row-1; r<=row+1; r++) {
+      for (int c = col-1; c<=col+1; c++) {
+        if (isValid(r, c)==true&& mines.contains(buttons[r][c])) {
+          numMines++;
+        }
+        if (mines.contains(buttons[row][col])) {
+          numMines--;
+        }
+      }
+    }
     return numMines;
 }
 public class MSButton
@@ -61,8 +107,8 @@ public class MSButton
     
     public MSButton ( int row, int col )
     {
-        // width = 400/NUM_COLS;
-        // height = 400/NUM_ROWS;
+        width = 400/NUM_COLS;
+        height = 400/NUM_ROWS;
         myRow = row;
         myCol = col; 
         x = myCol*width;
@@ -76,14 +122,37 @@ public class MSButton
     public void mousePressed () 
     {
         clicked = true;
-        //your code here
+
+
+      if (mouseButton==RIGHT) {
+        if (flagged==true) {
+          flagged = false;
+          clicked = false;
+        } else if (flagged==false) {
+          flagged = true;
+        }
+      } else if (mines.contains(this)) {
+        displayLosingMessage();
+      } else if (countMines(myRow, myCol)>0) {
+        setLabel(countMines(myRow, myCol));
+      } else {
+        if (isValid(myRow, myCol)&&!mines.contains(buttons[myRow][myCol])) {
+          for (int r = myRow-1; r<=myRow+1; r++) {     
+            for (int c = myCol-1; c<=myCol+1; c++) {
+              if (isValid(r, c)==true&&!buttons[r][c].clicked) {
+                buttons[r][c].mousePressed();
+              }
+            }
+          }
+        }
+      }
     }
     public void draw () 
     {    
         if (flagged)
             fill(0);
-        // else if( clicked && mines.contains(this) ) 
-        //     fill(255,0,0);
+        else if( clicked && mines.contains(this) ) 
+            fill(255,0,0);
         else if(clicked)
             fill( 200 );
         else 
